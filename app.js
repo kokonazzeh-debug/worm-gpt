@@ -145,5 +145,8 @@ document.getElementById("uploadBtn").onclick=()=>fileInput.click(); document.get
 document.getElementById("clearBtn").onclick=()=>{messages=[];resetWelcome();}; document.getElementById("newChat").onclick=newChat; document.getElementById("newChat2").onclick=newChat; document.getElementById("saveBtn").onclick=saveChat;
 modelSelect.onchange=updateModelInfo; modelSearch.oninput=renderModels; imageOnly.onchange=renderModels;
 document.getElementById("menuBtn").onclick=()=>document.getElementById("sidebar").classList.toggle("open");
+const settingsPanel=document.querySelector(".settings-panel");
+document.getElementById("modelsBtn").onclick=()=>settingsPanel.classList.toggle("open-mobile");
+document.addEventListener("click",e=>{ if(window.innerWidth<=950 && settingsPanel.classList.contains("open-mobile") && !settingsPanel.contains(e.target) && e.target.id!=="modelsBtn"){settingsPanel.classList.remove("open-mobile");} });
 
 resetWelcome(); loadChat(); loadModels();
