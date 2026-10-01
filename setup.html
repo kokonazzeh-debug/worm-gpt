@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NAZZEH AI — إعداد المفتاح</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="setup-page">
+  <main class="setup-card">
+    <img src="assets/worm-icon.png" class="setup-icon" alt="NAZZEH AI">
+    <div class="eyebrow">NAZZEH AI / SETUP</div>
+    <h1>إعداد Hugging Face</h1>
+    <p class="muted">المفتاح السري لا يوضع داخل GitHub Pages. ضعه داخل ملف <code>backend/.env</code> على السيرفر فقط.</p>
+
+    <ol class="steps">
+      <li>سجّل الدخول إلى Hugging Face.</li>
+      <li>افتح صفحة Access Tokens.</li>
+      <li>أنشئ Fine-grained token وفعّل صلاحية <b>Make calls to Inference Providers</b>.</li>
+      <li>انسخ المفتاح الذي يبدأ بـ <code>hf_</code>.</li>
+      <li>افتح <code>backend/.env</code> واكتب: <code>HF_TOKEN=hf_...</code></li>
+      <li>لا ترفع ملف <code>.env</code> إلى GitHub.</li>
+    </ol>
+
+    <div class="setup-actions">
+      <a class="primary-link" href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener">فتح صفحة طلب المفتاح في Hugging Face</a>
+      <a class="secondary-link" href="index.html">العودة إلى NAZZEH AI</a>
+    </div>
+
+    <div class="notice"><b>مهم:</b> حساب Hugging Face المجاني لديه رصيد تجريبي شهري صغير لـ Inference Providers، وليس استخدامًا مجانيًا بلا حدود. الرصيد والسياسات قد تتغير.</div>
+  </main>
+</body>
+</html>

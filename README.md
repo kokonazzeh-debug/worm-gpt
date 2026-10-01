@@ -1,27 +1,17 @@
-# NAZZEH AI — Worm-style red UI
+# NAZZEH AI Backend
 
-نسخة واجهة مستوحاة من الصورة المرجعية التي قدمتها:
-- أسود + أحمر.
-- Sidebar.
-- Chat area.
-- Model Selection.
-- Hugging Face model selector.
-- Temperature / Max Tokens.
-- Upload File / Image.
-- رسالة ترحيب باسم nazzeh el founder.
-- تعمل كـ static site على GitHub Pages.
+Node.js + Express proxy for Hugging Face Inference Providers.
 
-## GitHub Pages
+Set `HF_TOKEN` in `.env`, never in frontend files.
 
-ارفع الملفات إلى Repository ثم:
-Settings → Pages → Deploy from a branch → main → root.
+Run:
 
-## Hugging Face
+```bash
+npm install
+npm start
+```
 
-الواجهة مجهزة للاتصال بـ API عبر `CONFIG.apiUrl` في `app.js`.
-
-لا تضع Hugging Face Secret Token في GitHub Pages العام؛ أي زائر يستطيع رؤية JavaScript. استخدم Backend/Proxy يحتفظ بالسر ثم يجعل المتصفح يرسل له الرسائل.
-
-## ملاحظة
-
-الأيقونة الموجودة في `assets/worm-icon.png` مقتصة من الصورة المرجعية التي قدمتها في المحادثة لاستخدامها كمرجع بصري للمشروع.
+Endpoints:
+- `GET /api/health`
+- `GET /api/models`
+- `POST /api/chat`
