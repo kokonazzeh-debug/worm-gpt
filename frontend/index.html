@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NAZZEH AI — Hugging Face AI workspace">
+  <title>NAZZEH AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img src="assets/worm-icon.png" alt="NAZZEH AI icon">
+      <div><div class="brand-title">NAZZEH<span>AI</span></div><div class="brand-sub">nazzeh el founder</div></div>
+    </div>
+    <button class="new-chat" id="newChat">▣ New Chat <b>＋</b></button>
+    <nav>
+      <button class="nav-item active" data-section="history">◷ <span>History</span></button>
+      <button class="nav-item" data-section="models">▱ <span>Models</span></button>
+      <button class="nav-item" data-section="files">▤ <span>Files</span></button>
+      <a class="nav-item" href="setup.html">⚙ <span>API Setup</span></a>
+    </nav>
+    <div class="creator-card"><small>Created by:</small><strong>nazzeh el founder</strong><p>NAZZEH AI workspace powered by Hugging Face.</p></div>
+    <div class="side-logo"><img src="assets/worm-icon.png" alt=""><strong>NAZZEH AI</strong><small>v2.0.0</small></div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="menuBtn">☰</button>
+      <div class="page-title">‹ <span>NAZZEH AI — AI Assistant</span></div>
+      <div class="top-actions"><span>NAZZEH</span><span>●</span></div>
+    </header>
+
+    <div class="workspace">
+      <section class="chat-area">
+        <div class="chat" id="chat"></div>
+        <div class="composer-wrap">
+          <div class="attachment-preview" id="attachmentPreview"></div>
+          <div class="composer">
+            <label class="attach" title="Upload file">⌕<input id="fileInput" type="file" hidden accept=".txt,.md,.json,.csv,.js,.ts,.html,.css,.py,.java,.cpp,.c,.xml,.yaml,.yml,image/*"></label>
+            <textarea id="prompt" rows="1" maxlength="4000" placeholder="اكتب رسالتك هنا..."></textarea>
+            <button id="sendBtn" class="send" title="Send">➤</button>
+            <div class="composer-tools"><button id="uploadBtn">↥ Upload File</button><button id="imageBtn">▧ Upload Image</button><button id="clearBtn">▣ Clear Chat</button><span id="counter">0/4000</span></div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="settings-panel">
+        <h2>◉ Model Selection</h2>
+        <div class="section-label">🤗 Hugging Face Models</div>
+        <div class="model-toolbar"><input id="modelSearch" placeholder="ابحث عن موديل..."/><label><input id="imageOnly" type="checkbox"> صور</label></div>
+        <select id="modelSelect"></select>
+        <div class="model-current" id="modelCurrent">جاري تحميل الموديلات...</div>
+        <div class="model-meta" id="modelMeta"></div>
+        <label class="range-box">Temperature<input id="temperature" type="range" min="0" max="1.5" step="0.1" value="0.7"><output id="tempValue">0.7</output></label>
+        <label class="range-box">Max Tokens<input id="maxTokens" type="range" min="256" max="8192" step="256" value="2048"><output id="tokenValue">2048</output></label>
+        <details class="advanced"><summary>⚙ Advanced Settings</summary><p>رابط الـBackend محفوظ في <code>config.js</code>. المفتاح السري لا يوجد في الواجهة.</p></details>
+        <div class="panel-buttons"><button id="saveBtn">▣ Save Chat</button><button id="newChat2">＋ New Chat</button></div>
+        <div class="about-card"><img src="assets/worm-icon.png" alt=""><div><strong>NAZZEH AI</strong><p>Made by nazzeh el founder</p><small>Hugging Face Inference Providers</small></div></div>
+        <a class="setup-mini" href="setup.html">إعداد / تغيير مفتاح Hugging Face</a>
+      </aside>
+    </div>
+  </main>
+</div>
+<script src="config.js"></script><script src="app.js"></script>
+</body>
+</html>
