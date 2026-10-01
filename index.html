@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="NAZZEH AI">
+  <title>NAZZEH AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img src="assets/worm-icon.png" alt="NAZZEH icon">
+      <div>
+        <div class="brand-title">NAZZEH<span>AI</span></div>
+        <div class="brand-sub">nazzeh el founder</div>
+      </div>
+    </div>
+
+    <button class="new-chat" id="newChat"><span>▣</span> New Chat <b>＋</b></button>
+
+    <nav>
+      <button class="nav-item active">◷ <span>History</span></button>
+      <button class="nav-item">▱ <span>Models</span></button>
+      <button class="nav-item">▤ <span>Files</span></button>
+      <button class="nav-item">⚙ <span>Settings</span></button>
+    </nav>
+
+    <div class="creator-card">
+      <small>Created by:</small>
+      <strong>nazzeh el founder</strong>
+      <p>Powering the next generation of AI tools.</p>
+    </div>
+
+    <div class="side-logo">
+      <img src="assets/worm-icon.png" alt="">
+      <strong>NAZZEH AI</strong>
+      <small>v1.0.0</small>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="mobile-menu" id="menuBtn">☰</button>
+      <div class="page-title">‹ <span>NAZZEH AI - AI Assistant</span></div>
+      <div class="top-actions">
+        <span>♙</span><span>nazzeh</span><span>☾</span><span>⛶</span><span>⏻</span>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <section class="chat-area">
+        <div class="chat" id="chat"></div>
+
+        <div class="composer-wrap">
+          <div class="composer">
+            <label class="attach" title="Upload file">⌕
+              <input id="fileInput" type="file" hidden>
+            </label>
+            <textarea id="prompt" rows="1" placeholder="Type your message here..."></textarea>
+            <button id="sendBtn" class="send">➤</button>
+
+            <div class="composer-tools">
+              <button id="uploadBtn">↥ Upload File</button>
+              <button id="imageBtn">▧ Upload Image</button>
+              <button id="clearBtn">▣ Clear Chat</button>
+              <span id="counter">0/4000</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="settings-panel">
+        <h2>◉ Model Selection</h2>
+        <div class="section-label">🤗 Hugging Face Models</div>
+
+        <select id="modelSelect">
+          <option value="mistralai/Mistral-7B-Instruct-v0.3">mistralai/Mistral-7B-Instruct-v0.3</option>
+          <option value="meta-llama/Llama-3.2-3B-Instruct">meta-llama/Llama-3.2-3B-Instruct</option>
+          <option value="Qwen/Qwen2.5-7B-Instruct">Qwen/Qwen2.5-7B-Instruct</option>
+          <option value="google/gemma-2-9b-it">google/gemma-2-9b-it</option>
+          <option value="deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct">deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct</option>
+        </select>
+
+        <div class="model-current" id="modelCurrent">Model: mistralai/Mistral-7B-Instruct-v0.3</div>
+
+        <label class="range-box">Temperature
+          <input id="temperature" type="range" min="0" max="1.5" step="0.1" value="0.7">
+          <output id="tempValue">0.7</output>
+        </label>
+
+        <label class="range-box">Max Tokens
+          <input id="maxTokens" type="range" min="256" max="4096" step="256" value="2048">
+          <output id="tokenValue">2048</output>
+        </label>
+
+        <details class="advanced">
+          <summary>⚙ Advanced Settings</summary>
+          <p>API الاتصال يتم ضبطه في app.js أو عبر Backend آمن.</p>
+        </details>
+
+        <div class="panel-buttons">
+          <button id="saveBtn">▣ Save Chat</button>
+          <button id="newChat2">＋ New Chat</button>
+        </div>
+
+        <div class="about-card">
+          <img src="assets/worm-icon.png" alt="">
+          <div>
+            <strong>NAZZEH AI</strong>
+            <p>Made by nazzeh el founder</p>
+            <small>Powered by Hugging Face 🤗</small>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
