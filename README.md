@@ -1,61 +1,44 @@
-# NAZZEH AI v2 — Hugging Face Edition
+# NAZZEH AI
 
-واجهة NAZZEH AI بأسلوب أسود/أحمر، مع Backend آمن يحفظ Hugging Face token خارج GitHub Pages.
+واجهة AI Chat قابلة للنشر على GitHub Pages.
 
-## أهم نقطة: أين تضع المفتاح؟
+## المميزات
 
-1. افتح `frontend/setup.html` أو افتح:
-   https://huggingface.co/settings/tokens
-2. أنشئ **Fine-grained token** وفعّل صلاحية **Make calls to Inference Providers**.
-3. انسخ المفتاح `hf_...`.
-4. داخل مجلد `backend` انسخ `.env.example` إلى `.env`.
-5. ضع المفتاح هنا فقط:
+- واجهة Chat داكنة حديثة.
+- رسالة ترحيب تلقائية:
+  > مرحباً، أنا NAZZEH AI، مساعدك الشخصي من صنع nazzeh el founder.
+- اختيار موديل Hugging Face.
+- حفظ المحادثة محلياً في LocalStorage.
+- رفع ملف في الواجهة.
+- Responsive للموبايل والكمبيوتر.
+- لا يحتاج Backend لتشغيل الواجهة.
 
-```env
-HF_TOKEN=hf_xxxxxxxxxxxxxxxxx
-```
+## تشغيل على GitHub Pages
 
-**لا تضع المفتاح في `frontend/config.js` أو `app.js` ولا ترفعه إلى GitHub.**
+1. ارفع الملفات إلى Repository.
+2. من:
+   `Settings -> Pages`
+3. اختر:
+   `Deploy from a branch`
+4. اختر `main` ثم `/root`.
+5. Save.
 
-## تشغيل محليًا
+## ربط Hugging Face
 
-```bash
-cd backend
-npm install
-npm start
-```
+GitHub Pages لا يشغّل Backend. لا تضع Secret Token داخل `app.js` في Repository عام.
 
-ثم افتح `frontend/index.html` عبر Live Server أو أي web server محلي.
+الأفضل:
 
-`frontend/config.js` يحتوي على:
+`GitHub Pages -> Backend/Proxy -> Hugging Face`
 
-```js
-API_BASE_URL: "http://localhost:8787"
-```
+ضع رابط الـBackend في:
 
-## GitHub Pages
+`CONFIG.apiUrl`
 
-GitHub Pages يستضيف الواجهة فقط. الـBackend يجب نشره على خدمة تدعم Node.js/serverless وتمنحك HTTPS.
-بعد نشر الـBackend، غيّر `frontend/config.js` إلى رابط الـBackend HTTPS، مثل:
+في `app.js`.
 
-```js
-API_BASE_URL: "https://YOUR-BACKEND.example.com"
-```
+## تغيير الموديلات
 
-ثم ارفع مجلد `frontend` إلى GitHub Pages.
+عدّل خيارات `modelSelect` في `index.html` وضع Model ID المناسب من Hugging Face.
 
-## الموديلات
-
-الواجهة تطلب قائمة الموديلات مباشرة من Backend، والـBackend يقرأ قائمة OpenAI-compatible من Hugging Face Router. تظهر للمستخدم:
-- دعم الصور: `يدعم الصور` أو `نص فقط`.
-- حالة مجانية حالية إن أعلنها أحد المزودين: `Free now`.
-- وإلا تظهر `HF credit / paid حسب المزود`.
-
-حساب Hugging Face المجاني لديه رصيد شهري تجريبي صغير لـ Inference Providers؛ هذا ليس استخدامًا مجانيًا بلا حدود، وقد تتغير القيم والسياسات. راجع صفحة الأسعار الرسمية.
-
-## الأمان
-
-- `.env` مستثنى من Git.
-- CORS يمكن تقييده عبر `FRONTEND_ORIGINS`.
-- لا يوجد HF token في JavaScript العام.
-- الصور لا تُرسل إلا عند اختيار موديل يعلن دعم الصور.
+المشروع هنا مجرد واجهة؛ توفر كل موديل وطريقة استدعائه تعتمد على خدمة Hugging Face والنموذج المختار.

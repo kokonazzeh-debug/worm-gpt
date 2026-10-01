@@ -1,152 +1,229 @@
-const CONFIG = window.NAZZEH_CONFIG || { API_BASE_URL: "http://localhost:8787" };
-const API = String(CONFIG.API_BASE_URL || "").replace(/\/$/, "");
-const chat = document.getElementById("chat");
-const prompt = document.getElementById("prompt");
-const sendBtn = document.getElementById("sendBtn");
-const modelSelect = document.getElementById("modelSelect");
-const modelCurrent = document.getElementById("modelCurrent");
-const modelMeta = document.getElementById("modelMeta");
-const modelSearch = document.getElementById("modelSearch");
-const imageOnly = document.getElementById("imageOnly");
-const fileInput = document.getElementById("fileInput");
-const attachmentPreview = document.getElementById("attachmentPreview");
-const counter = document.getElementById("counter");
-const temp = document.getElementById("temperature");
-const maxTokens = document.getElementById("maxTokens");
-const tempValue = document.getElementById("tempValue");
-const tokenValue = document.getElementById("tokenValue");
-let models = [];
+const $ = (s) => document.querySelector(s);
+
+const chat = $("#chat");
+const prompt = $("#prompt");
+const composer = $("#composer");
+const sendBtn = $("#sendBtn");
+const modelSelect = $("#modelSelect");
+const modelLabel = $("#modelLabel");
+const history = $("#history");
+const fileInput = $("#fileInput");
+const filePreview = $("#filePreview");
+
+const CONFIG = {
+  // IMPORTANT:
+  // Do NOT put a Hugging Face secret token here when this site is public.
+  // Use a backend/proxy or Hugging Face's supported public/browser-safe setup.
+  apiUrl: "https://router.huggingface.co/v1/chat/completions",
+  apiToken: "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",
+  maxTokens: 600,
+  temperature: 0.7
+};
+
 let messages = [];
-let currentAttachment = null;
+let attachedFile = null;
 
-const fallbackModels = [
-  {id:"deepseek-ai/DeepSeek-V3-0324", supportsImage:false, freeNow:false, providers:[]},
-  {id:"deepseek-ai/DeepSeek-R1", supportsImage:false, freeNow:false, providers:[]},
-  {id:"Qwen/Qwen3-8B", supportsImage:false, freeNow:false, providers:[]},
-  {id:"Qwen/Qwen2.5-7B-Instruct", supportsImage:false, freeNow:false, providers:[]},
-  {id:"meta-llama/Llama-3.2-3B-Instruct", supportsImage:false, freeNow:false, providers:[]},
-  {id:"google/gemma-2-9b-it", supportsImage:false, freeNow:false, providers:[]},
-  {id:"mistralai/Mistral-7B-Instruct-v0.3", supportsImage:false, freeNow:false, providers:[]},
-  {id:"deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct", supportsImage:false, freeNow:false, providers:[]}
-];
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
 
-function addMessage(role, content, extra = {}) {
-  const el = document.createElement("div");
+function addMessage(role, content, save=true) {
+  const el = document.createElement("article");
   el.className = `message ${role}`;
-  const who = role === "user" ? "You" : "NAZZEH AI";
-  el.innerHTML = `<div class="message-head"><b>${who}</b></div><div class="message-body"></div>`;
-  const body = el.querySelector(".message-body");
-  body.textContent = content;
-  if (extra.image) { const img = document.createElement("img"); img.src = extra.image; img.alt = "uploaded"; body.appendChild(img); }
-  chat.appendChild(el); chat.scrollTop = chat.scrollHeight;
+  el.innerHTML = `
+    <div class="avatar">${role === "ai" ? "N" : "U"}</div>
+    <div class="message-body">
+      <div class="message-head">${role === "ai" ? "NAZZEH AI" : "أنت"}</div>
+      <div class="message-content">${escapeHtml(content)}</div>
+    </div>`;
+  chat.appendChild(el);
+  chat.scrollTop = chat.scrollHeight;
+
+  if (save) {
+    messages.push({role: role === "ai" ? "assistant" : "user", content});
+    saveConversation();
+  }
   return el;
 }
 
-function resetWelcome() {
-  chat.innerHTML = "";
-  addMessage("assistant", "مرحباً، أنا NAZZEH AI، مساعدك الشخصي من صنع nazzeh el founder. اختر موديل من القائمة وابدأ المحادثة.");
+function showWelcome() {
+  chat.innerHTML = `
+    <div class="welcome">
+      <div class="welcome-logo">N</div>
+      <h1>مرحباً بك في NAZZEH AI</h1>
+      <p>مساعدك الشخصي من صنع <b>nazzeh el founder</b></p>
+    </div>`;
 }
 
-function renderModels() {
-  const q = modelSearch.value.trim().toLowerCase();
-  const onlyImage = imageOnly.checked;
-  const list = models.filter(m => m.id.toLowerCase().includes(q) && (!onlyImage || m.supportsImage));
-  modelSelect.innerHTML = "";
-  for (const m of list) {
-    const o = document.createElement("option"); o.value = m.id; o.textContent = `${m.id} ${m.supportsImage ? "• IMAGE" : "• TEXT"}`; modelSelect.appendChild(o);
-  }
-  if (!list.length) { modelSelect.innerHTML = `<option value="">لا يوجد موديل مطابق</option>`; modelCurrent.textContent = "لا يوجد موديل مطابق للفلتر"; modelMeta.textContent = ""; return; }
-  const saved = localStorage.getItem("nazzeh-model");
-  if (saved && list.some(m => m.id === saved)) modelSelect.value = saved;
-  updateModelInfo();
+function typeIndicator() {
+  const el = document.createElement("article");
+  el.className = "message ai";
+  el.id = "typing";
+  el.innerHTML = `
+    <div class="avatar">N</div>
+    <div class="message-body">
+      <div class="message-head">NAZZEH AI</div>
+      <div class="message-content typing">
+        <span></span><span></span><span></span>
+      </div>
+    </div>`;
+  chat.appendChild(el);
+  chat.scrollTop = chat.scrollHeight;
 }
 
-function selectedModel() { return models.find(m => m.id === modelSelect.value); }
-function updateModelInfo() {
-  const m = selectedModel();
-  if (!m) return;
-  localStorage.setItem("nazzeh-model", m.id);
-  modelCurrent.textContent = `Model: ${m.id}`;
-  modelMeta.innerHTML = `<span class="pill ${m.supportsImage ? "ok" : "no"}">${m.supportsImage ? "يدعم الصور" : "نص فقط"}</span><span class="pill">${m.freeNow ? "Free now" : "HF credit / paid حسب المزود"}</span><span class="pill">${(m.providers || []).join(", ") || "provider حسب HF"}</span>`;
+function saveConversation() {
+  localStorage.setItem("nazzeh_messages", JSON.stringify(messages));
+  updateHistory();
 }
 
-async function loadModels() {
+function loadConversation() {
   try {
-    const r = await fetch(`${API}/api/models`);
-    if (!r.ok) throw new Error(await r.text());
-    const data = await r.json();
-    models = data.data || [];
-  } catch (e) {
-    models = fallbackModels;
-    addMessage("assistant", "تعذر تحميل قائمة الموديلات من الـBackend. استخدمت قائمة احتياطية. تأكد أن السيرفر يعمل وأن HF_TOKEN موجود.");
+    const saved = JSON.parse(localStorage.getItem("nazzeh_messages") || "[]");
+    if (Array.isArray(saved) && saved.length) {
+      messages = saved;
+      chat.innerHTML = "";
+      for (const m of messages) {
+        const role = m.role === "assistant" ? "ai" : "user";
+        addMessage(role, m.content, false);
+      }
+    } else {
+      startConversation();
+    }
+  } catch {
+    startConversation();
   }
-  renderModels();
 }
 
-function updateCounter() { counter.textContent = `${prompt.value.length}/4000`; }
-function setAttachment(file) {
-  if (!file) return;
-  currentAttachment = file;
-  attachmentPreview.innerHTML = `<span>${file.name}</span><button id="removeAttachment">×</button>`;
-  document.getElementById("removeAttachment").onclick = () => { currentAttachment = null; attachmentPreview.innerHTML = ""; };
+function updateHistory() {
+  history.innerHTML = "";
+  const userMessages = messages.filter(m => m.role === "user").slice(-8).reverse();
+  userMessages.forEach((m) => {
+    const item = document.createElement("div");
+    item.className = "history-item";
+    item.textContent = m.content;
+    history.appendChild(item);
+  });
 }
 
-async function fileToDataURL(file) {
-  return await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(file); });
+function startConversation() {
+  messages = [];
+  localStorage.removeItem("nazzeh_messages");
+  showWelcome();
+  const greeting = "مرحباً، أنا NAZZEH AI، مساعدك الشخصي من صنع nazzeh el founder. كيف أقدر أساعدك اليوم؟";
+  addMessage("ai", greeting);
 }
-async function buildUserContent(text) {
-  if (!currentAttachment) return text;
-  if (currentAttachment.type.startsWith("image/")) {
-    const m = selectedModel();
-    if (!m?.supportsImage) throw new Error("الموديل المختار لا يعلن دعم الصور. اختر موديل عليه IMAGE.");
-    return [{type:"text", text: text || "حلل الصورة."}, {type:"image_url", image_url:{url: await fileToDataURL(currentAttachment)}}];
+
+async function askAI(userText) {
+  if (!CONFIG.apiUrl) {
+    return "الواجهة شغالة تمام. لربط نموذج Hugging Face فعلياً، ضع رابط الـAPI في CONFIG.apiUrl واربطه من Backend آمن. لا تضع Secret Token داخل GitHub Pages.";
   }
-  const allowed = /^(text|application\/json|application\/csv|application\/javascript|text\/javascript|text\/markdown|text\/html|text\/css)/i.test(currentAttachment.type) || /\.(txt|md|json|csv|js|ts|html|css|py|java|cpp|c|xml|yaml|yml)$/i.test(currentAttachment.name);
-  if (!allowed) throw new Error("الملف غير مدعوم في النسخة الحالية. استخدم ملفًا نصيًا أو صورة.");
-  const textFile = await currentAttachment.text();
-  return `${text}\n\n[محتوى الملف: ${currentAttachment.name}]\n${textFile.slice(0, 50000)}`;
+
+  const selectedModel = modelSelect.value;
+
+  const payload = {
+    model: selectedModel,
+    messages: [
+      {
+        role: "system",
+        content: "You are NAZZEH AI, a helpful Arabic/English assistant created by nazzeh el founder. Be clear, practical, and honest about uncertainty."
+      },
+      ...messages,
+      { role: "user", content: userText }
+    ],
+    max_tokens: CONFIG.maxTokens,
+    temperature: CONFIG.temperature
+  };
+
+  const headers = {"Content-Type":"application/json"};
+  if (CONFIG.apiToken) headers.Authorization = `Bearer ${CONFIG.apiToken}`;
+
+  const response = await fetch(CONFIG.apiUrl, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`API ${response.status}: ${detail.slice(0,300)}`);
+  }
+
+  const data = await response.json();
+
+  return data.choices?.[0]?.message?.content
+      || data.generated_text
+      || data[0]?.generated_text
+      || "لم يرجع النموذج نصاً مفهوماً.";
 }
 
 async function sendMessage() {
   const text = prompt.value.trim();
-  if (!text && !currentAttachment) return;
-  const model = selectedModel();
-  if (!model) return addMessage("assistant", "اختر موديلًا أولاً.");
-  if (currentAttachment?.type.startsWith("image/") && !model.supportsImage) return addMessage("assistant", "هذا الموديل نصي فقط. فعّل فلتر الصور واختر موديلًا يدعم الصور.");
+  if (!text || sendBtn.disabled) return;
 
-  const attachment = currentAttachment;
-  let userContent;
-  try { userContent = await buildUserContent(text); } catch (e) { return addMessage("assistant", e.message); }
-  addMessage("user", text || `تم إرفاق ${attachment.name}`, attachment?.type?.startsWith("image/") ? {image: URL.createObjectURL(attachment)} : {});
-  messages.push({ role: "user", content: userContent });
-  prompt.value = ""; currentAttachment = null; attachmentPreview.innerHTML = ""; updateCounter();
+  addMessage("user", text);
+  prompt.value = "";
+  autoResize();
+
   sendBtn.disabled = true;
-  const thinking = addMessage("assistant", "... جاري التفكير");
+  typeIndicator();
 
   try {
-    const r = await fetch(`${API}/api/chat`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ model:model.id, messages:[{role:"system",content:"You are NAZZEH AI, a helpful Arabic/English assistant created by nazzeh el founder."}, ...messages], max_tokens:Number(maxTokens.value), temperature:Number(temp.value) }) });
-    const raw = await r.text();
-    if (!r.ok) throw new Error(raw || `HTTP ${r.status}`);
-    const data = JSON.parse(raw);
-    const answer = data?.choices?.[0]?.message?.content || "لم يصل رد من الموديل.";
-    thinking.remove(); addMessage("assistant", answer); messages.push({role:"assistant",content:answer});
-  } catch (e) {
-    thinking.remove(); addMessage("assistant", `حصل خطأ في الاتصال: ${e.message}`);
-  } finally { sendBtn.disabled = false; prompt.focus(); }
+    const answer = await askAI(text);
+    $("#typing")?.remove();
+    addMessage("ai", answer);
+  } catch (error) {
+    $("#typing")?.remove();
+    addMessage("ai", `حصل خطأ أثناء الاتصال بالنموذج:\n${error.message}`);
+  } finally {
+    sendBtn.disabled = false;
+    prompt.focus();
+  }
 }
 
-function newChat() { messages = []; resetWelcome(); }
-function saveChat() { localStorage.setItem("nazzeh-chat", JSON.stringify(messages)); addMessage("assistant", "تم حفظ المحادثة على هذا الجهاز."); }
-function loadChat() { try { const saved = JSON.parse(localStorage.getItem("nazzeh-chat") || "[]"); if (saved.length) { messages=saved; for (const m of saved) addMessage(m.role === "assistant" ? "assistant" : "user", typeof m.content === "string" ? m.content : "[رسالة متعددة الوسائط]"); return; } } catch {} resetWelcome(); }
+function autoResize() {
+  prompt.style.height = "auto";
+  prompt.style.height = Math.min(prompt.scrollHeight, 150) + "px";
+}
 
-temp.oninput=()=>tempValue.textContent=temp.value; maxTokens.oninput=()=>tokenValue.textContent=maxTokens.value; prompt.oninput=updateCounter;
-sendBtn.onclick=sendMessage; prompt.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage();}});
-document.getElementById("uploadBtn").onclick=()=>fileInput.click(); document.getElementById("imageBtn").onclick=()=>{fileInput.accept="image/*";fileInput.click();}; fileInput.onchange=()=>setAttachment(fileInput.files[0]);
-document.getElementById("clearBtn").onclick=()=>{messages=[];resetWelcome();}; document.getElementById("newChat").onclick=newChat; document.getElementById("newChat2").onclick=newChat; document.getElementById("saveBtn").onclick=saveChat;
-modelSelect.onchange=updateModelInfo; modelSearch.oninput=renderModels; imageOnly.onchange=renderModels;
-document.getElementById("menuBtn").onclick=()=>document.getElementById("sidebar").classList.toggle("open");
-const settingsPanel=document.querySelector(".settings-panel");
-document.getElementById("modelsBtn").onclick=()=>settingsPanel.classList.toggle("open-mobile");
-document.addEventListener("click",e=>{ if(window.innerWidth<=950 && settingsPanel.classList.contains("open-mobile") && !settingsPanel.contains(e.target) && e.target.id!=="modelsBtn"){settingsPanel.classList.remove("open-mobile");} });
+composer.addEventListener("submit", (e) => {
+  e.preventDefault();
+  sendMessage();
+});
 
-resetWelcome(); loadChat(); loadModels();
+prompt.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+prompt.addEventListener("input", autoResize);
+
+modelSelect.addEventListener("change", () => {
+  modelLabel.textContent = modelSelect.value;
+});
+
+$("#newChat").addEventListener("click", startConversation);
+$("#clearBtn").addEventListener("click", startConversation);
+$("#menuBtn").addEventListener("click", () => $("#sidebar").classList.toggle("open"));
+
+fileInput.addEventListener("change", () => {
+  attachedFile = fileInput.files[0] || null;
+  if (attachedFile) {
+    filePreview.textContent = `الملف المحدد: ${attachedFile.name}`;
+    filePreview.classList.remove("hidden");
+  } else {
+    filePreview.classList.add("hidden");
+  }
+});
+
+showWelcome();
+setTimeout(() => {
+  if (!localStorage.getItem("nazzeh_messages")) startConversation();
+  else loadConversation();
+}, 250);
